@@ -1,0 +1,97 @@
+Description: 'AWS: HelloWorld web application'
+Outputs:
+  InstancePublicIp:
+    Description: Public IP of the instance
+    Value: !GetAtt
+      - EC2Instance
+      - PublicIp
+  WebUrl:
+    Description: Application endpoint
+    Value: !Join
+      - ''
+      - - 'http://'
+        - !GetAtt
+          - EC2Instance
+          - PublicDnsName
+        - ':'
+        - '3000'
+Parameters:
+  KeyPair:
+    ConstraintDescription: must be name of an existing EC2 KeyPair
+    Description: Name of an existing EC2 KeyPair to SSH with
+    Type: 'AWS::EC2::KeyPair::KeyName'
+Resources:
+  InstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Path: /
+      Roles:
+        - !Ref Role
+  Policy:
+    Type: 'AWS::IAM::Policy'
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - 's3:*'
+            Effect: Allow
+            Resource:
+              - '*'
+      PolicyName: AllowS3
+      Roles:
+        - !Ref Role
+  Role:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+  SecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: Allow SSH and TCP/3000 access
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          FromPort: '22'
+          IpProtocol: tcp
+          ToPort: '22'
+        - CidrIp: 0.0.0.0/0
+          FromPort: '3000'
+          IpProtocol: tcp
+          ToPort: '3000'
+  EC2Instance:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      IamInstanceProfile: !Ref InstanceProfile
+      ImageId: ami-40142d25
+      InstanceType: t2.micro
+      KeyName: !Ref KeyPair
+      SecurityGroups:
+        - !Ref SecurityGroup
+      Tags:
+        -
+          Key: Application
+          Value: hello world
+        -
+          Key: Environment
+          Value: Test
+      UserData: !Base64
+        'Fn::Join':
+          - |+
+
+          - - '#!/bin/bash'
+            - yum install --enablerepo=epel -y git
+            - pip install 'ansible==2.7.10'
+            - >-
+              /usr/local/bin/ansible-pull -U https://github.com/pshade/ansible
+              nodeserver.yml -i localhost
+            - >-
+              echo '*/10 * * * * ec2-user /usr/local/bin/ansible-pull -U
+              https://github.com/pshade/ansible nodeserver.yml -i localhost' >
+              /etc/cron.d/ansible-pull
+
