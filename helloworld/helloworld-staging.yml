@@ -57,13 +57,13 @@ Resources:
       GroupDescription: Allow SSH and TCP/3000 access
       SecurityGroupIngress:
         - CidrIp: 0.0.0.0/0
-          FromPort: '22'
+          FromPort: 22
           IpProtocol: tcp
-          ToPort: '22'
+          ToPort: 22
         - CidrIp: 0.0.0.0/0
-          FromPort: '3000'
+          FromPort: 3000
           IpProtocol: tcp
-          ToPort: '3000'
+          ToPort: 3000
   EC2Instance:
     Type: 'AWS::EC2::Instance'
     Properties:
@@ -94,4 +94,3 @@ Resources:
               echo '*/10 * * * * ec2-user /usr/local/bin/ansible-pull -U
               https://github.com/pshade/ansible nodeserver.yml -i localhost' >
               /etc/cron.d/ansible-pull
-
