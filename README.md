@@ -1,5 +1,5 @@
 # cloudformation-templates
-AWS CloudFormation templates
+AWS CloudFormation templates for testing
 
 ## aws cli example
 aws cloudformation create-stack --capabilities CAPABILITY_IAM --stack-name helloworld-staging --template-body file://helloworld-staging.yml --parameters ParameterKey=KeyPair,ParameterValue=[ssh-key-name-here]
